@@ -8,7 +8,6 @@ import {
   FiSettings,
   FiLogOut,
   FiMessageSquare,
-  FiAward,
   FiCalendar,
   FiChevronDown,
   FiChevronRight,
@@ -66,49 +65,57 @@ const Navbar = () => {
 
   // Mock notification data
   const notifications = [
-    {
-      id: 1,
-      title: "Project Update",
-      message: "Your project 'EcoTracker' has been approved!",
-      time: "5 min ago",
-      read: false,
-      type: "success"
-    },
-    {
-      id: 2,
-      title: "Team Invitation",
-      message: "Sarah invited you to join 'Quantum AI' team",
-      time: "1 hour ago",
-      read: false,
-      type: "invitation"
-    },
-    {
-      id: 3,
-      title: "Deadline Reminder",
-      message: "Submission deadline in 2 days",
-      time: "3 hours ago",
-      read: true,
-      type: "reminder"
-    },
-    {
-      id: 4,
-      title: "New Message",
-      message: "You have 3 unread messages",
-      time: "1 day ago",
-      read: true,
-      type: "message"
-    }
+    { id: 1, title: "Project Update", message: "Your project 'EcoTracker' has been approved!", time: "5 min ago", read: false, type: "success" },
+    { id: 2, title: "Team Invitation", message: "Sarah invited you to join 'Quantum AI' team", time: "1 hour ago", read: false, type: "invitation" },
+    { id: 3, title: "Deadline Reminder", message: "Submission deadline in 2 days", time: "3 hours ago", read: true, type: "reminder" },
+    { id: 4, title: "New Message", message: "You have 3 unread messages", time: "1 day ago", read: true, type: "message" },
   ];
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const navItems = [
     { name: "Home", path: "/", icon: <MdDashboard /> },
-    { name: "Projects", path: "/projects", icon: <MdWorkspaces /> },
-    { name: "Ideas", path: "/ideas", icon: <MdLightbulb /> },
-    { name: "Teams", path: "/teams", icon: <RiTeamFill /> },
-    { name: "Schedule", path: "/schedule", icon: <FiCalendar /> },
-    { name: "Prizes", path: "/prizes", icon: <FiAward /> },
+    { 
+      name: "Equipment", 
+      path: "/equipment", 
+      icon: <MdLightbulb />,
+      subMenu: [
+        { name: "Add Equipment", path: "/equipment/add" },
+        { name: "View All Equipment", path: "/equipment/list" },
+        { name: "Maintenance Requests", path: "/equipment/requests" },
+      ],
+    },
+    { 
+      name: "Teams", 
+      path: "/teams", 
+      icon: <RiTeamFill />,
+      subMenu: [
+        { name: "Create Team", path: "/teams/add" },
+        { name: "View Teams", path: "/teams/list" },
+        { name: "Assign Technicians", path: "/teams/assign" },
+      ],
+    },
+    { 
+      name: "Requests", 
+      path: "/requests", 
+      icon: <FiCheckCircle />,
+      subMenu: [
+        { name: "New Request", path: "/requests/new" },
+        { name: "My Requests", path: "/requests/mine" },
+        { name: "Kanban Board", path: "/requests/kanban" },
+      ],
+    },
+    { name: "Calendar", path: "/calendar", icon: <FiCalendar /> },
+    { 
+      name: "Reports", 
+      path: "/reports", 
+      icon: <MdWorkspaces />,
+      subMenu: [
+        { name: "Requests by Team", path: "/reports/team" },
+        { name: "Requests by Equipment", path: "/reports/equipment" },
+        { name: "Status Reports", path: "/reports/status" },
+      ],
+    },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -156,18 +163,31 @@ const Navbar = () => {
             {/* CENTER (DESKTOP) */}
             <div className="hidden lg:flex items-center gap-1 bg-white/50 rounded-full px-1 py-1 backdrop-blur-sm">
               {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    isActive(item.path)
-                      ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md"
-                      : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-                  }`}
-                >
-                  {item.icon}
-                  {item.name}
-                </Link>
+                <div key={item.name} className="relative group">
+                  <Link
+                    to={item.path}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      isActive(item.path)
+                        ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md"
+                        : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                    }`}
+                  >
+                    {item.icon} {item.name} {item.subMenu && <FiChevronDown className="w-4 h-4 ml-1" />}
+                  </Link>
+                  {item.subMenu && (
+                    <div className="absolute left-0 mt-1 w-48 bg-white shadow-lg rounded-xl opacity-0 group-hover:opacity-100 transition-opacity invisible group-hover:visible z-50">
+                      {item.subMenu.map((sub) => (
+                        <Link
+                          key={sub.name}
+                          to={sub.path}
+                          className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg"
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -222,7 +242,6 @@ const Navbar = () => {
                         transition={{ duration: 0.2 }}
                         className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-xl border border-blue-100 z-50 overflow-hidden"
                       >
-                        {/* HEADER */}
                         <div className="p-4 border-b border-blue-50 bg-gradient-to-r from-blue-50 to-white">
                           <div className="flex items-center justify-between">
                             <p className="font-bold text-gray-800">Notifications</p>
@@ -230,12 +249,8 @@ const Navbar = () => {
                               Mark all as read
                             </button>
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {unreadCount} unread notifications
-                          </p>
+                          <p className="text-xs text-gray-500 mt-1">{unreadCount} unread notifications</p>
                         </div>
-
-                        {/* NOTIFICATIONS LIST */}
                         <div className="max-h-96 overflow-y-auto">
                           {notifications.map((notification) => (
                             <div
@@ -246,35 +261,24 @@ const Navbar = () => {
                               onClick={() => setNotificationMenu(false)}
                             >
                               <div className="flex items-start gap-3">
-                                <div className={`mt-1 w-2 h-2 rounded-full ${
-                                  notification.read ? "bg-gray-300" : "bg-blue-500"
-                                }`} />
+                                <div className={`mt-1 w-2 h-2 rounded-full ${notification.read ? "bg-gray-300" : "bg-blue-500"}`} />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between mb-1">
-                                    <p className="font-semibold text-gray-800 text-sm">
-                                      {notification.title}
-                                    </p>
+                                    <p className="font-semibold text-gray-800 text-sm">{notification.title}</p>
                                     <FiChevronRight className="text-gray-400 w-4 h-4" />
                                   </div>
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    {notification.message}
-                                  </p>
+                                  <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs text-gray-500 flex items-center gap-1">
-                                      <FiClock className="w-3 h-3" />
-                                      {notification.time}
+                                      <FiClock className="w-3 h-3" /> {notification.time}
                                     </span>
-                                    {notification.type === "success" && (
-                                      <FiCheckCircle className="text-green-500 w-4 h-4" />
-                                    )}
+                                    {notification.type === "success" && <FiCheckCircle className="text-green-500 w-4 h-4" />}
                                   </div>
                                 </div>
                               </div>
                             </div>
                           ))}
                         </div>
-
-                        {/* FOOTER */}
                         <div className="p-3 border-t border-blue-50 bg-blue-50/30">
                           <Link
                             to="/notifications"
@@ -321,9 +325,7 @@ const Navbar = () => {
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
                     </div>
-                    <FiChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${
-                      profileMenu ? "rotate-180" : ""
-                    }`} />
+                    <FiChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${profileMenu ? "rotate-180" : ""}`} />
                   </button>
 
                   <AnimatePresence>
@@ -345,12 +347,8 @@ const Navbar = () => {
                               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-bold text-gray-800 truncate">
-                                {user?.username}
-                              </p>
-                              <p className="text-sm text-gray-500 truncate">
-                                {user?.email}
-                              </p>
+                              <p className="font-bold text-gray-800 truncate">{user?.username}</p>
+                              <p className="text-sm text-gray-500 truncate">{user?.email}</p>
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="px-2 py-1 bg-blue-100 text-blue-600 text-xs rounded-full font-medium">
                                   Participant
@@ -477,19 +475,34 @@ const Navbar = () => {
               {/* MENU ITEMS */}
               <div className="p-4 space-y-1">
                 {navItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    onClick={() => setMobileMenu(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                      isActive(item.path)
-                        ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md"
-                        : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                    }`}
-                  >
-                    {item.icon}
-                    <span className="font-medium">{item.name}</span>
-                  </Link>
+                  <div key={item.name} className="mb-1">
+                    <Link
+                      to={item.path}
+                      onClick={() => setMobileMenu(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        isActive(item.path)
+                          ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md"
+                          : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                      }`}
+                    >
+                      {item.icon} <span className="font-medium">{item.name}</span>
+                    </Link>
+                    
+                    {item.subMenu && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {item.subMenu.map((sub) => (
+                          <Link
+                            key={sub.name}
+                            to={sub.path}
+                            onClick={() => setMobileMenu(false)}
+                            className="block px-4 py-2 text-gray-600 hover:bg-blue-50 rounded-lg"
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
 
@@ -518,7 +531,7 @@ const Navbar = () => {
               {/* FOOTER */}
               <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-100">
                 <p className="text-xs text-gray-500 text-center">
-                  © 2024 HackFlow. All rights reserved.
+                  © 2025 HackFlow. All rights reserved.
                 </p>
               </div>
             </motion.div>
