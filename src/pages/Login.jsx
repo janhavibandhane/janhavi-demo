@@ -1,23 +1,21 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { loginService } from "../services/service";
-import { Link,useNavigate } from "react-router-dom";
+import { loginService, googleLoginService } from "../services/service";
+import { Link, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
   const { login, loading, setLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
-
-  const [form, setForm] = useState({
-    username: "mor_2314",
-    password: "83r5^_",
-  });
-
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  // 🔐 Normal Login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -25,103 +23,128 @@ const Login = () => {
 
     try {
       const data = await loginService(form);
-      login({ username: form.username }, data.token);
-          navigate("/", { replace: true });
-    } catch {
-      setError("Invalid credentials");
+      login(data.user, data.accessToken);
+
+      setSuccess("Login successful!");
+      // Wait 3 seconds before redirect
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 3000); // 3 seconds
+    } catch (err) {
+      setError(err.response?.data?.msg || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔐 Google Login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+
+      const data = await googleLoginService(credentialResponse.credential);
+
+      login(data.user, data.accessToken);
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 3000); // 3 seconds    } catch (err) {
+      setError("Google login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-[#7aa2f7] via-[#8ec5fc] to-[#cdb4db] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-blue-200 to-white">
+      <div className="w-full max-w-md bg-white/30 backdrop-blur-2xl rounded-3xl px-8 py-10 shadow-lg">
+        <h2 className="text-2xl font-semibold text-center">Welcome back</h2>
+        <p className="text-sm text-center text-gray-500 mb-6">
+          Login to get started
+        </p>
 
-      {/* Mountains layers */}
-      <div className="absolute bottom-0 w-full h-64 bg-gradient-to-t from-[#1e3a8a] to-transparent opacity-80" />
-      <div className="absolute bottom-0 w-full h-48 bg-gradient-to-t from-[#1e40af] to-transparent opacity-70" />
-
-      {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md bg-white/20 backdrop-blur-xl rounded-3xl shadow-2xl px-8 py-10 text-white">
-
-        {/* Power Icon */}
-        <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-            <span className="text-2xl">⏻</span>
-          </div>
-        </div>
-
-        <h2 className="text-xl font-semibold text-center mb-6">
-          Welcome back!
-        </h2>
-
+        {/* Error Alert */}
         {error && (
-          <p className="text-red-200 text-sm text-center mb-4">
-            {error}
-          </p>
+          <div
+            className="mb-4 flex items-start gap-3 rounded-xl
+    bg-red-100/70 border border-red-300 text-red-700
+    px-4 py-3 text-sm shadow-md animate-fadeIn"
+          >
+            <span className="text-lg">⚠️</span>
+            <p className="mt-[0.3rem]">{error}</p>
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-
-          <input
-            type="text"
-            name="username"
-            placeholder="Email address"
-            value={form.username}
-            onChange={handleChange}
-            className="w-full px-5 py-3 rounded-full bg-white/20 
-            placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-white/40"
-            required
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full px-5 py-3 rounded-full bg-white/20 
-            placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-white/40"
-            required
-          />
-
-          <div className="flex justify-between text-sm text-white/70 px-2">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="accent-white" />
-              Remember me
+        {/* Success Alert */}
+        {success && (
+          <div
+            className="mb-4 flex items-start gap-3 rounded-xl
+    bg-green-100/70 border border-green-300 text-green-700
+    px-4 py-3 text-sm shadow-md animate-fadeIn"
+          >
+            <span className="text-lg">✅</span>
+            <p>{success}</p>
+          </div>
+        )}
+        {/* Normal Login */}
+        <form onSubmit={handleSubmit} className="space-y-5 mt-6">
+          {/* Email */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700 ml-2">
+              Email
             </label>
-            <span className="cursor-pointer hover:underline">
-              Forgot password?
-            </span>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-full border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700 ml-2">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-full border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
           </div>
 
           <button
-            type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-full bg-white text-[#3b82f6] 
-            font-medium hover:opacity-90 transition disabled:opacity-60"
+            className="w-full py-3 rounded-full bg-blue-600 text-white font-medium hover:bg-blue-700 transition disabled:opacity-60"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        {/* Signup */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-white/70 mb-3">
-            Not a member yet?
-          </p>
-          <Link to="/register">
-          <button className="px-8 py-2 rounded-full bg-white/20 hover:bg-white/30 transition">
-            Sign up
-          </button>
-          </Link>
+        {/* Divider */}
+        <div className="my-3 text-center text-gray-500">OR</div>
+
+        {/* Google Login */}
+        <div className="flex justify-center rounded">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google Sign-in failed")}
+          />
         </div>
 
-        {/* Social */}
-        <div className="mt-8 flex justify-center gap-6 text-white/60 text-sm">
-          <span className="cursor-pointer">Facebook</span>
-          <span className="cursor-pointer">Twitter</span>
-          <span className="cursor-pointer">Instagram</span>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-600 mb-3">Not a member yet?</p>
+          <Link to="/register">
+            <button className="px-8 py-2 rounded-full border border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition">
+              Sign up
+            </button>
+          </Link>
         </div>
       </div>
     </div>
